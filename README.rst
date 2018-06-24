@@ -3,17 +3,10 @@ dagger
 ======
 
 
-a DSL for computational DAGs
+A DSL for computational DAGs
 
 
 Description
 ===========
 
-A longer description of your project goes here...
-
-
-Note
-====
-
-This project has been set up using PyScaffold 3.0.3. For details and usage
-information on PyScaffold see http://pyscaffold.org/.
+A DSL to create, edit, and consume DAGs.
