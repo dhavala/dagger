@@ -1,0 +1,95 @@
+---  # dag level configuraiton
+ConfigDAG:
+ name: Sample_01 
+ 
+ # optionals until the section end
+ dataports:
+  in: [uri] # not required if imported dag has a source
+  out: [uri] # not required if imported dag has a sink
+
+ 
+ load: defaults # in case of multiple settings
+
+ author:
+  name: Soma
+  email: soma.dhavala@gmail.com
+ 
+ storage:
+  from: s3
+  format: tsv
+ runtime:
+  orchestrator: dask
+ 
+ 
+---  # import published dags, if any.
+ImportDAGs:
+ - pipeEg: # dag name
+   from: daghub.sklearn # dag database
+   as: preprocess # alias for easy reference
+ - mnf: 
+   from: daghub.surprise 
+   import: nmf
+
+
+--- # create/ update/ remove nodes
+CreateNodes:
+
+  # full node spec
+  - ReadData:  # source node callable
+    import: pandas # optional
+    dataports: # optional
+     in: [in_file_01,file_02]
+     out: [out_file_01,out_file_02]
+    as: A # optional
+    type: source # optional  
+
+  # list of nodes with options in json
+  - [CV, {"CV":{"import":val}}]
+
+  - TransformData:
+    callable: CV
+    import: sklearn.model_search.CV
+    ports:
+     in: [in_file_01,file_02]
+     out: [out_file_01,out_file_02]
+    as: B
+  
+  - SearchModel
+    
+  - WriteData
+
+UpdateNodes:
+  - pipeEg.node_03: # override some properties of an existing node
+    dataports:
+        in: [file_03]
+
+RemoveNodes:
+  - node_03 # remove a single node
+  - [node_02,node_01] # remove in bulk
+  - pipeEg.subdag_01 # remove a subdag in an imported subdag
+
+  
+
+--- # make [create, update, remove] links to form subdags and the dag
+MakeDAG: 
+  - subdag_01: > # give an alias for the follownig links
+     x > y 
+     y > z
+  - subdag_02: >
+     x > y
+     A ! B # remove link
+     C | B{k1:v1} | [A1{k2:v2},B1] > E[{k1:v1,k2:v2},{}]
+  - subdag_03: >
+     subdag_01 > subdag_02
+     A ! B
+  - >
+     C | B{"k1":v1} | [A1{k2:v2},B1] > E[{k1:v1,k2:v2},{}]
+     ! nmf.subdag_01 # remove all the within the subdag
+  - >
+    subdag_01 ! subdag_02 # remove links between the subdags
+    ! subdag
+
+  # remove links between this dag the subdags
+  - >
+    this ! subdag_02 
+    ! subdag

@@ -1,0 +1,108 @@
+# import pre-defined, published dags
+SECTION: DAGLIB 
+# do not modify above
+dag_01: 
+ from: daghub.sklearn 
+ import: pipeEg
+ as: pipe
+dag_02: 
+ from: daghub.surprise 
+ import: nmf
+
+# load configs and over ride them
+SECTION: CONFIG
+# do not modify above
+
+load: defaults 
+# override defaults, applicable to whole graph
+author:
+ name: Soma
+ email: soma.dhavala@gmail.com
+storage:
+ from: s3
+ format: tsv
+runtime:
+ orchestrator: dask
+
+
+# dag spec begins. there can be only one DAG in a section
+# every thing that begins here is a DAG
+SECTION: SUBDAG
+
+Nodes: 
+ - node_01:
+   callable: read.csv
+   import: pandas
+   ports:
+    in: [in_file_01,file_02]
+    out: [out_file_01,out_file_02]
+   as: A
+ - node_02:
+   callable: CV
+   import: sklearn.model_search.CV
+   ports:
+    in: [in_file_01,file_02]
+    out: [out_file_01,out_file_02]
+   as: B
+ - node_03:
+   callable: sample
+   # more
+ - node_04:
+   callable: sample
+   # more
+   as: C
+ - |
+  !node_03
+ - |
+  ![abc,abc]
+  
+   
+Links:
+ - >
+  A, B
+ - >
+  A > [B {p1:val,p2:val2}, C{}] > D 
+ - >
+  A > [B {p1:val,p2:val2} > A1 {p1:val1,p2:val2}, C{}] > D 
+ 
+ - >
+  A -{}-> [B-{}->[A1,B1],C,D]
+ - >
+  B -[out_file_01:in_file_02,out_file_02:in_file_01]-> node_03
+ - >
+  pipe.sink -[port.1,port.2]-> node_01
+ - >
+  C -[port.1,port.2]-> nmf.source
+ - >
+  nmf.sink --> sd.node_01
+ - >
+  A | B |
+  C | D
+ - |
+  A1 ~[]~ B1 ~ C1
+  A2 | B2 | C2
+ - |
+  ![A1,B1] ![B1,A1] A1-->B1
+ - |
+  {{var}}
+
+Links2: 
+  - |
+   A > B
+   C > B{k1:v1} > [A1{k2,v2},B1]
+   A | B
+   C | B{k1:v1} | [A1{k2:v2},B1] > E[{k1:v1,k2:v2},{}]
+  - >
+   A3 | B3
+
+Links3: >
+  A >> B
+  C >> B{k1:v1} >> [A1{k2,v2},B1]
+  A |> B
+  C | B{k1:v1} | [A1{k2:v2},B1] > E[{k1:v1,k2:v2},{}]
+
+Links4: >
+  A ! B # remove link
+  C > B{k1:v1} > [A1{k2,v2},B1]
+  A | B
+  C | B{k1:v1} | [A1{k2:v2},B1] > E[{k1:v1,k2:v2},{}]

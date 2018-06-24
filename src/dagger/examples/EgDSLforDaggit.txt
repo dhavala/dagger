@@ -1,0 +1,77 @@
+/*
+ An example DAG written in a DSL, which is a mix of
+ Cypher, Dot, Python, C, Yaml
+ */
+
+
+// import pre-defined, published dags
+from daghub.sklearn import pipeEg as pipe
+from daghub.surprise import nmf
+
+// load config
+from dagconfig import defaults
+
+// override defaults, applicable to whole graph
+author:
+	name: Soma
+	email: soma.dhavala@gmail.com
+
+storage:
+	from: s3
+	format: tsv
+
+runtime:
+	orchestrator: dask
+	
+# dag spec begins
+
+dag "mydag" {
+	
+	// inline definition of node with args
+	
+	node_01 [
+		callable = "read.csv"
+		import = "pandas"
+		in.port = [in_file_01,file_02]
+		out.port = [out_file_01,out_file_02]
+	] as A
+
+	// another node with variable key-args
+	// can overwride graph level defaults
+	
+	node_02 [
+		callable = "CV"
+		import = "sklearn.model_search.CV"
+		kwargs = {"arg1": val1, "arg2"={"arg21"=val21,"arg22"=val22}}
+		in.port = [in_file_01,file_02]
+		out.port = [out_file_01,out_file_02]
+		storage = {type=file}
+	] as B
+
+	node_03 [
+		callable = "sample"
+		// more here	
+	]
+
+	node_04 [
+		callable = "sample"
+		// more here	
+	] as C
+
+	node_01 --> node_02 -[out_file_01:in_file_02,out_file_02,]-> node_03
+	
+	/* in-memory edge transfer, and both left and right node ports have
+	correct positional mapping
+	*/
+	node_03 -[]-> node_04
+	
+	subdag "subdag" {
+
+	node_01 --> node_02
+	} as sd
+
+	// Cypher style link specification
+	pipe.sink -[port.1,port.2]-> node_01
+	C -[port.1,port.2]-> nmf.source
+	nmf.sink --> sd.node_01
+}
