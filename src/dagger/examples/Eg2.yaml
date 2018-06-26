@@ -21,10 +21,10 @@ ConfigDAG:
  runtime:
   orchestrator: dask
  
- report.storage: *storage
-  format: pdf
- 
- 
+ report.storage:
+  copy: *storage
+  to: pdf 
+
 ---  # import published dags, if any.
 ImportDAGs:
  - pipeEg: # dag name
@@ -33,7 +33,6 @@ ImportDAGs:
  - mnf: 
    from: daghub.surprise 
    import: nmf
-
 
 --- # create/ update/ remove nodes
 CreateNodes:
@@ -74,8 +73,6 @@ RemoveNodes:
   - nmf.A # remove a single node
   - [pipeEg.B,pipeEg.C] # remove in bulk
   - pipeEg.subdag_01 # remove a subdag in an imported subdag
-
-  
 
 --- # make [create, update, remove] links to form subdags and the dag
 MakeDAG: 

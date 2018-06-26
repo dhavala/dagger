@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import yaml
+import pprint
+
+from ..parse import *
 
 class Lib(yaml.YAMLObject):
 	yaml_tag = '!Lib'
@@ -11,7 +14,7 @@ with open("Eg2.yaml", 'r') as stream:
     try:
         for doc in yaml.load_all(stream):
         	print('***')
-        	print(doc)
+        	pprint.pprint(doc)
 
     
     except yaml.YAMLError as exc:
