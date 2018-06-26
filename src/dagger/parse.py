@@ -203,12 +203,15 @@ for edges in edgeLists:
 pprint(edgeList.edge_list)
 
 
-KEY_ACTIONS = ['ConfigDAG','ImportDAGs','CreateNodes','UpdateNodes','RemoveNodes','MakeDAG']
-KEY_NODE_ATTRIBUTES = ['name','','CreateNodes','UpdateNodes','RemoveNodes','MakeDAG']
+DAG_LEXICON = ['ConfigureDag','ImportDag','CreateTasks','UpdateTasks','RemoveTasks','ComposeDAG']
+#DAG_LEXICON = ['version','config.this','import.dags','create.tasks.Tasks','UpdateTasks','RemoveTasks','ComposeDAG']
+NODE_LEXICON = ['name','','CreateNodes','UpdateNodes','RemoveNodes','MakeDAG']
+
+
 
 
 # first pass checks are done
-def load_dag_spec(file = "./examples/Eg2.yaml"):
+def load_dag_spec_01(file = "./examples/Eg2.yaml"):
 
     dag_stream = {}
     
@@ -233,5 +236,19 @@ def load_dag_spec(file = "./examples/Eg2.yaml"):
             pprint(exc)
     return dag_stream
 
+
+#dag_stream = load_dag_spec()
+def load_dag_spec(file = "./examples/SampleDag.yaml"):
+    dag_stream = []
+    with open(file, 'r') as stream:
+        try:
+            for doc in yaml.load_all(stream):
+                #pprint('***')
+                pprint(doc)
+                dag_stream.append(doc)
+        except yaml.YAMLError as exc:
+            print("here")
+    return dag_stream
+
 dag_stream = load_dag_spec()
-pprint(dag_stream)
+#pprint(dag_stream)

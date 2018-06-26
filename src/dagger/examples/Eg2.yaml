@@ -1,5 +1,5 @@
 ---  # dag level configuraiton
-ConfigDAG:
+Config:
  name: Sample_01 
  
  # optionals from here until end of this document
@@ -26,7 +26,7 @@ ConfigDAG:
   to: pdf 
 
 ---  # import published dags, if any.
-ImportDAGs:
+Import:
  - pipeEg: # dag name
    from: daghub.sklearn # dag database
    as: preprocess # alias for easy reference
@@ -35,30 +35,33 @@ ImportDAGs:
    import: nmf
 
 --- # create/ update/ remove nodes
-CreateNodes:
+CreateTasks:
 
   # full node spec
-  - ReadData:  # source node callable
-    import: pandas # optional
-    dataports: # optional
-     in: [in_file_01,file_02]
-     out: [out_file_01,out_file_02]
-    as: A # optional
-    type: source # optional  
+  - task: 
+     name: ReadData  # source node callable
+     import: pandas # optional
+     dataports: # optional
+      in: [in_file_01,file_02]
+      out: [out_file_01,out_file_02]
+     as: A # optional
+     type: source # optional  
 
   # list of nodes with options in json
-  - [CV, {"CV":{"import":val}}]
+  - task: [{"name":"SplitData"},{"name":"SplitData"}]
 
-  - TransformData:
-    callable: CV
-    import: sklearn.model_search.CV
-    ports:
-     in: [in_file_01,file_02]
-     out: [out_file_01,out_file_02]
-    as: B
+  - task: 
+    name: TransformData
+     callable: CV
+     import: sklearn.model_search.CV
+      ports:
+       in: [in_file_01,file_02]
+       out: [out_file_01,out_file_02]
+     as: B
   
-  - SearchModel: 
-    as: C
+  - task: 
+     name: SearchModel: 
+     as: C
     
   - WriteData:
     as: D
@@ -75,7 +78,7 @@ RemoveNodes:
   - pipeEg.subdag_01 # remove a subdag in an imported subdag
 
 --- # make [create, update, remove] links to form subdags and the dag
-MakeDAG: 
+LinkTasks: 
   - subdag_01: > # give an alias for the follownig links
      A > B > C | D
 
