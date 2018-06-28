@@ -200,7 +200,7 @@ for edges in edgeLists:
         #pdb.set_trace()
     #print("")
 
-pprint(edgeList.edge_list)
+#pprint(edgeList.edge_list)
 
 
 DAG_LEXICON = ['ConfigureDag','ImportDag','CreateTasks','UpdateTasks','RemoveTasks','ComposeDAG']
@@ -238,7 +238,9 @@ def load_dag_spec_01(file = "./examples/Eg2.yaml"):
 
 
 #dag_stream = load_dag_spec()
-def load_dag_spec(file = "./examples/SampleDag.yaml"):
+f1 = "./examples/ImportExamples.yaml"
+f2 = "./examples/CreateTaskExamples.yaml"
+def load_dag_spec(file = f2):
     dag_stream = []
     with open(file, 'r') as stream:
         try:

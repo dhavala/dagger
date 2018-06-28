@@ -3,7 +3,7 @@ pydot example 1
 @author: Federico Cáceres
 @url: http://pythonhaven.wordpress.com/2009/12/09/generating_graphs_with_pydot
 """
-import pydot
+from ..dagger 
 
 # this time, in graph_type we specify we want a DIrected GRAPH
 graph = pydot.Dot(graph_type='digraph')

@@ -1,0 +1,121 @@
+set.version: '0.0.2'
+# dag level configuraiton
+set.config:
+ exp.name: Sample_01
+ 
+ # below are optional
+ load.config: default
+ author.name: Soma
+ author.email: soma.dhavala@gmail.com
+ 
+ data.ports.in: [uri] # not required if imported dag has a source
+ data.ports.out: [uri] # not required if imported dag has a sink
+ runtime.orchestrator: dask
+
+# import published dags, if any.
+import.dags:
+ - name: pipeEg # dag name
+   from: daghub.sklearn # dag database
+   as: preprocess # alias for easy reference
+ - name: mnf
+
+# generic create/ update/ remove nodes (generic)
+create.tasks:
+ - name: ReadData  # callable (conv over config)
+   import: pandas # optional
+   data.ports.in: [in_file_01,file_02]
+   data.ports.out: [out_file_01,out_file_02]
+   as: A # optional
+   type: source # optional
+   set.config:
+    author.name: Soma2
+   arguments: passable_var_arguments
+
+# below are some special apis
+create.piped.tasks@name:
+  # promise (not guarentee) to run
+  # task pipeline in memory
+  - [{"callable":"SplitData"},{"callable":"SplitData"}]
+
+create.piped.core.sklearn.tasks:
+  # task pipeline that are sklearn centric
+  - [{"callable":"SplitData"},{"callable":"SplitData"}]
+
+create.parallel.tasks:
+  # task pipeline that are sklearn centric
+  - [x,y]
+
+create.seq.tasks:
+  # like pipeline tasks but with disk i/o
+  - name: TransformData
+    callable: CV # explicit
+    import: sklearn.model_search.CV
+    ports:
+     in: [in_file_01,file_02]
+     out: [out_file_01,out_file_02]
+    as: B
+   
+   # template for script with options provided 
+  - name: FeatureEngineering
+    arguments: {"arg1":1,"arg2":2,"arg3":3} 
+    script: >
+     spark-submit ${arg1}, ${arg2}, ${arg3} 
+    
+  - name: WriteData
+    as: D
+  - as: xx
+
+# edit few properties of an existing task
+edit.tasks:
+  - name: pipeEg.node_03 # override some properties of an existing node
+    dataports:
+      in: [file_03]
+    as: E
+
+edit.tasks@d1: 
+# will have scope only for tasks created in d1
+  - name: 01 # override some properties of an existing node
+    dataports:
+      in: [file_03]
+
+# generic delete tasks
+delete.tasks:
+  - nmf.A # remove a single node
+  - [pipeEg.B,pipeEg.C] # remove in bulk
+  - pipeEg.subdag_01 # remove a subdag in an imported subdag
+  - pipeEg.d1
+
+# special delete apis
+delete.piped.tasks@d1: all
+delete.piped.tasks@d2: [0,2]
+
+
+# make [create, update, remove] links to form subdags and the dag
+
+compose.dag@sub1: > 
+ A > B > C | D
+ D1.1 > A
+
+compose.dag@sub2: > 
+ pipeEg.C > A
+ A ! B # remove link
+ C | B{k1:v1} | [A1{k2:v2},B1] > E[{k1:v1,k2:v2},{}]
+
+
+compose.dag: 
+  - subdag_01: > # give an alias for the follownig links
+     A > B > C | D
+     D1.1 > D2.1
+
+  - subdag_02: > # DOT style
+     pipeEg.C > A
+     A ! B # remove link
+     C | B{k1:v1} | [A1{k2:v2},B1] > E[{k1:v1,k2:v2},{}]
+  
+  - subdag_03: > # Cypher style
+     subdag_01 > subdag_02
+     C |{k1:v1} B >{k2:v2} [A1,B1] >{k1:v1,k2:v2} E
+
+  - >
+   this ! nmf.subdag_01
+   subdag_01 ! subdag_02 # remove all links  between the subdag

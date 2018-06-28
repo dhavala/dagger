@@ -1,0 +1,40 @@
+create.tasks@Flow01:
+ - use.core.pandas
+ - use.core: [sklearn, etl]
+ - use.core.sklearn: [Linear_Regression,SVM]
+ - in.mem
+# to follow
+# above imports can be expressed as follows
+create.taskbag.use.core.[pandas,sklearn.[Linear_Regression,SVM].in.mem@Flow02:
+ - create.task@task01: # task definition begins
+   - use.core.nltk
+   - read.corpus
+   - run.POSTagger
+   - write.corpus
+ - create.task@02: 
+   - use.core.spacy
+   - read.corpus
+   - run.Actionalyzer
+   - write.corpus
+
+# it can be collapsed 
+create.taskbag.use.core.[nltk,spacy].in.mem.in.seq@Flow02:
+ - read.corpus.run.POSTagger.write.text@01 
+ - read.corpus.run.Actionalyzer.write.text@02
+
+create.task: # these tasks are grouped
+ - using.core: [pandas,dask]
+ - on.disk.in.seq
+ - task@01:
+  - read.df
+  - using.spacy
+  - run.POSTagger
+  - write.model
+ - task@02:
+  - read.text
+  - run.CV
+  - write.report
+
+
+
+

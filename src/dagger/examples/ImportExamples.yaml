@@ -1,0 +1,11 @@
+from.daghub.etl.import@PubDag: [Iris_Eg01, Iris_Eg02]
+# Iris_Eg01 can be referenced as PubDag.1
+# Searched for Iris_Eg01 in daghub.etl
+
+from.daglib.import:
+ - Iris_Eg02@dag1 # it will be referenced as dag1
+ - Iris_Eg02 # it will be referenced with same name
+
+from.daglib.etl.*.import:
+ - Iris_Eg02@dag1 # it will be referenced as dag1
+ - Iris_Eg02 # it will be referenced with same name
