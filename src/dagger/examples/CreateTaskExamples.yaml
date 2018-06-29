@@ -1,40 +1,66 @@
-create.tasks@Flow01:
+# basic create task api
+create.task@SOURCE:
  - use.core.pandas
- - use.core: [sklearn, etl]
- - use.core.sklearn: [Linear_Regression,SVM]
- - in.mem
-# to follow
-# above imports can be expressed as follows
-create.taskbag.use.core.[pandas,sklearn.[Linear_Regression,SVM].in.mem@Flow02:
- - create.task@task01: # task definition begins
-   - use.core.nltk
-   - read.corpus
-   - run.POSTagger
-   - write.corpus
- - create.task@02: 
-   - use.core.spacy
-   - read.corpus
-   - run.Actionalyzer
-   - write.corpus
+ - use.core.[sklearn, etl]
+ - use.core.sklearn.[Linear_Regression,SVM]
+ - read.corpus # can be customized
+ - run.POSTagger # can be customized
+ - write.corpus # can be customized
 
-# it can be collapsed 
-create.taskbag.use.core.[nltk,spacy].in.mem.in.seq@Flow02:
- - read.corpus.run.POSTagger.write.text@01 
- - read.corpus.run.Actionalyzer.write.text@02
+# customize read
+create.task@read01:
+ - use.core.pandas
+ - read.corpus@01:
+    - into.numpy@01:
+       from: file://<file_default_path>/eg/harry.csv
+       with: {"y":"json"}
+    - into.numpy@02:
+       from: file://<file_default_path>/eg/potter.csv
+       with: {"x":"json"}
+ - run.POSTagger # can be customized
+ - write.corpus # can be customized
 
-create.task: # these tasks are grouped
- - using.core: [pandas,dask]
- - on.disk.in.seq
- - task@01:
-  - read.df
-  - using.spacy
-  - run.POSTagger
-  - write.model
- - task@02:
-  - read.text
-  - run.CV
-  - write.report
+# customize read
+create.task@read02:
+ - use.core.pandas
+ - read.corpus.into.numpy@01:
+    - url: file://<file_default_path>/eg/harry.csv
+      args@1: {"args":"json args"}
+    - url: file://<file_default_path>/eg/harry.csv
+      args@2: {"@":2,"args":"json args"}
+ - fetch.schema.into.spacy@01:
+    - cypher: {"cypher-query"}
+      args@1: {"y":"json"}
+    - cql: {"query"}
+      args@2: {"y":"json"}
+ - read.config.into@01:
+    - none.script: >
+       python $arg1 $arg2
+      args@1: {"arg1":"val", "arg2":"val"}
+    - pandas.cql: {"query"}
+      args@2: {"y":"json"}
+ - run.POSTagger # can be customized
+ - write.corpus # can be customized
+ 
 
-
-
-
+ # customize callable
+create.task@read02:
+ - use.core.pandas
+ - read.corpus.into.numpy@01:
+    - url: file://<file_default_path>/eg/harry.csv
+      args@1: {"args":"json args"}
+    - url: file://<file_default_path>/eg/harry.csv
+      args@2: {"@":2,"args":"json args"}
+ - fetch.schema.into.spacy@01:
+    - cypher: {"cypher-query"}
+      args@1: {"y":"json"}
+    - cql: {"query"}
+      args@2: {"y":"json"}
+ - read.config@01:
+    - into.none.script: >
+       python $arg1 $arg2
+      args@1: {"arg1":"val", "arg2":"val"}
+    - into.pandas.cql: {"query"}
+      args@2: {"y":"json"}
+ - run.POSTagger:  # can be customized
+ - write.corpus # can be customized
