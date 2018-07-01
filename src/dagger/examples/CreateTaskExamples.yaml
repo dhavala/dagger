@@ -1,66 +1,42 @@
-# basic create task api
-create.task@SOURCE:
- - use.core.pandas
- - use.core.[sklearn, etl]
- - use.core.sklearn.[Linear_Regression,SVM]
- - read.corpus # can be customized
- - run.POSTagger # can be customized
- - write.corpus # can be customized
+# graph has input and output dataports
 
-# customize read
-create.task@read01:
- - use.core.pandas
- - read.corpus@01:
-    - into.numpy@01:
-       from: file://<file_default_path>/eg/harry.csv
-       with: {"y":"json"}
-    - into.numpy@02:
-       from: file://<file_default_path>/eg/potter.csv
-       with: {"x":"json"}
- - run.POSTagger # can be customized
- - write.corpus # can be customized
+# import 
 
-# customize read
-create.task@read02:
- - use.core.pandas
- - read.corpus.into.numpy@01:
-    - url: file://<file_default_path>/eg/harry.csv
-      args@1: {"args":"json args"}
-    - url: file://<file_default_path>/eg/harry.csv
-      args@2: {"@":2,"args":"json args"}
- - fetch.schema.into.spacy@01:
-    - cypher: {"cypher-query"}
-      args@1: {"y":"json"}
-    - cql: {"query"}
-      args@2: {"y":"json"}
- - read.config.into@01:
-    - none.script: >
-       python $arg1 $arg2
-      args@1: {"arg1":"val", "arg2":"val"}
-    - pandas.cql: {"query"}
-      args@2: {"y":"json"}
- - run.POSTagger # can be customized
- - write.corpus # can be customized
- 
+CREATE DATAPORT train.df FROM: file://<file_path>/eg/harry.csv
+CREATE DATAPORT report.text FROM: s3://<s3_path>/eg/keywords.text
+ ARGS: {"optional args"}
 
- # customize callable
-create.task@read02:
- - use.core.pandas
- - read.corpus.into.numpy@01:
-    - url: file://<file_default_path>/eg/harry.csv
-      args@1: {"args":"json args"}
-    - url: file://<file_default_path>/eg/harry.csv
-      args@2: {"@":2,"args":"json args"}
- - fetch.schema.into.spacy@01:
-    - cypher: {"cypher-query"}
-      args@1: {"y":"json"}
-    - cql: {"query"}
-      args@2: {"y":"json"}
- - read.config@01:
-    - into.none.script: >
-       python $arg1 $arg2
-      args@1: {"arg1":"val", "arg2":"val"}
-    - into.pandas.cql: {"query"}
-      args@2: {"y":"json"}
- - run.POSTagger:  # can be customized
- - write.corpus # can be customized
+CREATE TASK read:
+  USE: core.pandas
+  RUN: POSTagger # can be customized
+  ARGS: {"variable args"}
+
+CREATE TASK transform:
+  USE: core.pandas # use this module
+  REQUIRES: networkx # install this package, if not available
+  RUN: POSTagger # can be customized
+  ARGS:
+    drop_missing_perc: 0.9
+    target_variable: SalePrice
+    ignore_variables: Id
+    numeric_impute: median
+    categorical_impute: most_frequent
+
+# above can be compressed 
+CREATE TASK transform USE core.pandas RUN PosTagger ARGS:
+  drop_missing_perc: 0.9
+  target_variable: SalePrice
+  ignore_variables: Id
+  numeric_impute: median
+  categorical_impute: most_frequent
+
+UPDATE TASK transform ARGS:
+  drop_missing_perc: 0.8
+
+DELETE TASK: [transform, mod_transform]
+
+# FLOWS
+COMPOSE FLOW @sub01: >
+ train.df > read > transform > report.text
+COMPOSE FLOW @sub02: >
+ train.df >{"train"} read >{"train":"train"} transform >{"report"} report.text

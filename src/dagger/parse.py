@@ -249,7 +249,7 @@ def load_dag_spec(file = f2):
                 pprint(doc)
                 dag_stream.append(doc)
         except yaml.YAMLError as exc:
-            print("here")
+            print(exc)
     return dag_stream
 
 dag_stream = load_dag_spec()
